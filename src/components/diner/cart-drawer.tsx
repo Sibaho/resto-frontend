@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatRupiah } from "@/lib/format";
 import { restaurant } from "@/lib/mock-menu";
-import { selectSubtotal, useCart } from "@/stores/cart";
+import { useCart } from "@/stores/cart";
+import { useCartTotals } from "@/hooks/use-cart-totals";
 
 type Props = {
   open: boolean;
@@ -24,17 +25,26 @@ export function CartDrawer({ open, onOpenChange, onCheckout }: Props) {
   const lines = useCart((s) => s.lines);
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
+  const clear = useCart((s) => s.clear);
 
-  const subtotal = selectSubtotal(lines);
-  const tax = subtotal * restaurant.taxRate;
-  const total = subtotal + tax;
+  const { subtotal, tax, total } = useCartTotals(restaurant.taxRate);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="flex items-baseline justify-between px-4 pt-4">
           <DrawerTitle>Your order</DrawerTitle>
-          <span className="text-[14px] text-ink-muted">{restaurant.tableLabel}</span>
+          {lines.length > 0 ? (
+            <button
+              type="button"
+              onClick={clear}
+              className="text-[14px] font-medium text-ink-muted transition-colors hover:text-danger"
+            >
+              Clear
+            </button>
+          ) : (
+            <span className="text-[14px] text-ink-muted">{restaurant.tableLabel}</span>
+          )}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
