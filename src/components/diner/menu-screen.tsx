@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import useEmblaCarousel from "embla-carousel-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
 import { RestaurantHeader } from "./restaurant-header";
 import { CategoryRail } from "./category-rail";
 import { ItemCard } from "./item-card";
@@ -25,6 +24,8 @@ import { selectCount, selectSubtotal, useCart } from "@/stores/cart";
  * warm underneath (frontend-architecture §2, §5).
  */
 export function MenuScreen() {
+  const router = useRouter();
+
   // Flatten items in category order; each slide is one item.
   const flatItems = useMemo(
     () => categories.flatMap((c) => itemsByCategory(c.id)),
@@ -68,10 +69,8 @@ export function MenuScreen() {
   const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [placed, setPlaced] = useState(false);
 
   const addItem = useCart((s) => s.addItem);
-  const clearCart = useCart((s) => s.clear);
   const lines = useCart((s) => s.lines);
   const count = selectCount(lines);
   const total = selectSubtotal(lines);
@@ -101,12 +100,9 @@ export function MenuScreen() {
   );
 
   const handleCheckout = useCallback(() => {
-    // Placeholder for POST /orders — clears the client cart and confirms.
-    clearCart();
     setCartOpen(false);
-    setPlaced(true);
-    setTimeout(() => setPlaced(false), 2200);
-  }, [clearCart]);
+    router.push("/checkout");
+  }, [router]);
 
   return (
     <main className="relative mx-auto h-[100dvh] w-full max-w-[480px] overflow-hidden bg-canvas">
@@ -146,31 +142,6 @@ export function MenuScreen() {
         onOpenChange={setCartOpen}
         onCheckout={handleCheckout}
       />
-
-      <AnimatePresence>
-        {placed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="material-blur fixed inset-0 z-50 mx-auto flex max-w-[480px] flex-col items-center justify-center gap-4 text-center"
-          >
-            <motion.div
-              initial={{ scale: 0.6 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 380, damping: 22 }}
-            >
-              <CheckCircle2 className="h-20 w-20 text-success" strokeWidth={1.5} />
-            </motion.div>
-            <div>
-              <p className="text-[22px] font-bold text-white">Order placed</p>
-              <p className="mt-1 text-[15px] text-white/70">
-                The kitchen is on it. Sit tight!
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }
